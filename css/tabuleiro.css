@@ -20,18 +20,20 @@
     border: 1px solid;
     align-items: center;
     justify-content: center;
-    background-color: #e5a900c9;
 }
 .tabuleiro .row > div.B{
-    /* background-color: darkgrey; */
     background-color: #2c2c2c;
 }
 .tabuleiro .row > div.W{
     background-color: white;
 }
-
-.tabuleiro .row > div 
-i{
+.tabuleiro .row:first-child > div,
+.tabuleiro .row:last-child > div,
+.tabuleiro .row > div:first-child,
+.tabuleiro .row > div:last-child{
+    background-color: #e5a900c9;
+}
+.tabuleiro .row > div i{
     width: 100%;
     height: 100%;
     display: flex;
@@ -52,7 +54,7 @@ i{
 .tabuleiro .row > div i,
 .tabuleiro .row > div i.cicle{
     border-radius: 50%;
-    box-shadow: inset 0 0 17px -10px black;
+    box-shadow: inset 0 0 17px -2px black;
 }
 .branco{
     color: white;
