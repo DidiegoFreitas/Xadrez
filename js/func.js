@@ -1,82 +1,91 @@
 $(()=>{
     console.log('depois de recarregar');
-    let rows = 10;
-    let cols = 10;
-    let tabulerio = $('<div>', {class:'tabuleiro'});
-    let PPB = $('<i>', {class:'fa-solid fa-chess-pawn branco'});
-    let preenchimentoPosicoes = [
-        [ ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' ' ],
-        [ '1', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '1' ],
-        [ '2', 'peao', 'peao', 'peao', 'peao', 'peao', 'peao', 'peao', 'peao', '2' ],
-        [ '3', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '3' ],
-        [ '4', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '4' ],
-        [ '5', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '5' ],
-        [ '6', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '6' ],
-        [ '7', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '7' ],
-        [ '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '8' ],
-        [ ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' ' ],
-    ];
+    prepararTabulerio();
+});
 
-    let mapeandoPosicoes = {
-        1:{ 1:'torre branco', 2:'cavalo branco', 3:'bispo branco', 4:'rei branco', 5:'rainha branco', 6:'bispo branco', 7:'cavalo branco', 8:'torre branco' },
-        2:{ 1:'peao branco', 2:'peao branco', 3:'peao branco', 4:'peao branco', 5:'peao branco', 6:'peao branco', 7:'peao branco', 8:'peao branco' },
-        7:{ 1:'peao preto', 2:'peao preto', 3:'peao preto', 4:'peao preto', 5:'peao preto', 6:'peao preto', 7:'peao preto', 8:'peao preto' },
-        8:{ 1:'torre preto', 2:'cavalo preto', 3:'bispo preto', 4:'rei preto', 5:'rainha preto', 6:'bispo preto', 7:'cavalo preto', 8:'torre preto' },
+var pieceChess = {};
+
+function createPieceChess(icon, cor) {
+    if(pieceChess[cor] == undefined) pieceChess[cor] = {};
+    if(pieceChess[cor][icon] == undefined) pieceChess[cor][icon] = [];
+
+    pieceChess[cor][icon].push(
+        $('<i>', {
+            id:`${icon}_${cor}_${pieceChess[cor][icon].length + 1}`, 
+            class:`fa-solid fa-chess-${icon} ${cor}`,
+            piece:icon,
+        }).on('click', onClickPiece)
+    );
+
+    return pieceChess[cor][icon][ (pieceChess[cor][icon].length - 1) ];
+}
+
+function getPieceBoard(row, col) {
+    let res = { value:'', class:'' };
+    let mapPositions = {
+        0:{ 1:'A', 2:'B', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H' },
+        1:{ 0:'1', 1:'rook', 2:'knight', 3:'bishop', 4:'king', 5:'queen', 6:'bishop', 7:'knight', 8:'rook', 9:'1' },
+        2:{ 0:'2', 1:'pawn', 2:'pawn', 3:'pawn', 4:'pawn', 5:'pawn', 6:'pawn', 7:'pawn', 8:'pawn', 9:'2' },
+        3:{ 0:'3', 9:'3' },
+        4:{ 0:'4', 9:'4' },
+        5:{ 0:'5', 9:'5' },
+        6:{ 0:'6', 9:'6' },
+        7:{ 0:'7', 1:'pawn', 2:'pawn', 3:'pawn', 4:'pawn', 5:'pawn', 6:'pawn', 7:'pawn', 8:'pawn', 9:'7' },
+        8:{ 0:'8', 1:'rook', 2:'knight', 3:'bishop', 4:'king', 5:'queen', 6:'bishop', 7:'knight', 8:'rook', 9:'8' },
+        9:{ 1:'A', 2:'B', 3:'C', 4:'D', 5:'E', 6:'F', 7:'G', 8:'H' },
     };
 
+    if(mapPositions[row] && mapPositions[row][col]) res['value'] = mapPositions[row][col];
 
-    for (let r = 0; r < rows; r++) {
+    if(col > 0 && col < 9){
+        if(row > 0 && row < 3) res['class'] = 'preto';
+        if(row > 6 && row < 9) res['class'] = 'branco';
+    }
+
+    return res;
+}
+
+function prepararTabulerio() {
+    let tabulerio = $('<div>', {class:'tabuleiro'});
+
+    for (let r = 0; r < 10; r++) {
         let row = $('<div>', {class:`row row_${r}`})
-        for (let c = 0; c < cols; c++) {
-            let conteudo = preenchimentoPosicoes[r][c];
-            if(mapeandoPosicoes[r] && mapeandoPosicoes[r][c]){
-                let split = mapeandoPosicoes[r][c].split(' ');
-                conteudo = newPeca(split[0], split[1]);
-            }
+        for (let c = 0; c < 10; c++) {
+            let aux = getPieceBoard(r, c);
+            let conteudo = ( (aux['value'].length < 2) ? aux['value'] : createPieceChess(aux['value'], aux['class']) );
+
             row.append(
-                $('<div>', {class:`col col_${c} ${ (((r + c) % 2) > 0) ? 'W' : 'B' }`}).append(conteudo)
+                $('<div>', {class:`col col_${c} ${ (((r + c) % 2) > 0) ? 'W' : 'B' }`, refRow:r, refCol:c}).append(conteudo)
             )
         }
         tabulerio.append(row);
     }
 
-    $('body').append(tabulerio)
-});
-let pecas = {};
-
-function newPeca(namePeca, cor) {
-    let res = null;
-    let icone = 'pawn';
-    switch (namePeca) {
-        case 'peao':
-            icone = 'pawn';
-        break;
-        case 'torre':
-            icone = 'rook';
-        break;
-        case 'cavalo':
-            icone = 'knight';
-        break;
-        case 'bispo':
-            icone = 'bishop';
-        break;
-        case 'rei':
-            icone = 'king';
-        break;
-        case 'rainha':
-            icone = 'queen';
-        break;
-    }
-
-    if(pecas[cor] == undefined) pecas[cor] = {};
-    if(pecas[cor][namePeca] == undefined) pecas[cor][namePeca] = [];
-
-    pecas[cor][namePeca].push($('<i>', {class:`fa-solid fa-chess-${icone} ${cor} ${namePeca}_${cor}_${pecas[cor][namePeca].length}`}));
-    res = pecas[cor][namePeca][ (pecas[cor][namePeca].length - 1) ];
-
-    return res;
+    $('body').append(tabulerio);
 }
 
-function movimentar(peca, posicaoAtual, posicaoescolhida) {
-    
+function onClickPiece() {
+    console.log(this);
+    let currentPosition = getPosition(this);
+    let pieceCor = ( $(this).hasClass('branco') ? 'branco' : 'preto');
+
+    switch ($(this).attr('piece')) {
+        case 'pawn':
+            console.log(this);
+            console.log(currentPosition);
+            console.log('posições posiveis', pieceCor);
+
+            if(pieceCor == 'branco'){
+
+            }else{
+                console.log('row', (currentPosition['row'] + 1), 'col', currentPosition['col'])
+                
+            }
+        break;
+    }
+}
+
+function getPosition(piece) {
+    let currentCol = $(piece).closest('.col');
+    return { row:currentCol.attr('refRow'), col:currentCol.attr('refCol') };
 }
