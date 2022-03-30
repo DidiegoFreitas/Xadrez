@@ -2,10 +2,10 @@ $(()=>{
     console.log('depois de recarregar');
     prepararTabulerio();
 });
-
+var tabulerio = $('<div>', {class:'tabuleiro'});
 var pieceChess = {};
 
-function createPieceChess(icon, cor) {
+function createPieceChess(icon, cor, rowInitial, colInitial) {
     if(pieceChess[cor] == undefined) pieceChess[cor] = {};
     if(pieceChess[cor][icon] == undefined) pieceChess[cor][icon] = [];
 
@@ -14,6 +14,8 @@ function createPieceChess(icon, cor) {
             id:`${icon}_${cor}_${pieceChess[cor][icon].length + 1}`, 
             class:`fa-solid fa-chess-${icon} ${cor}`,
             piece:icon,
+            rowInitial,
+            colInitial,
         }).on('click', onClickPiece)
     );
 
@@ -46,13 +48,18 @@ function getPieceBoard(row, col) {
 }
 
 function prepararTabulerio() {
-    let tabulerio = $('<div>', {class:'tabuleiro'});
+    tabulerio = $('<div>', {class:'tabuleiro'});
 
     for (let r = 0; r < 10; r++) {
         let row = $('<div>', {class:`row row_${r}`})
         for (let c = 0; c < 10; c++) {
             let aux = getPieceBoard(r, c);
-            let conteudo = ( (aux['value'].length < 2) ? aux['value'] : createPieceChess(aux['value'], aux['class']) );
+            let conteudo = ( (aux['value'].length < 2) ? aux['value'] : createPieceChess(aux['value'], aux['class'], r, c) );
+
+            if(r==4 && c==4) conteudo = createPieceChess('bishop', 'branco', r, c);
+            if(r==4 && c==5) conteudo = createPieceChess('knight', 'branco', r, c);
+            if(r==5 && c==4) conteudo = createPieceChess('rook', 'branco', r, c);
+            if(r==5 && c==5) conteudo = createPieceChess('pawn', 'branco', r, c);
 
             row.append(
                 $('<div>', {class:`col col_${c} ${ (((r + c) % 2) > 0) ? 'W' : 'B' }`, refRow:r, refCol:c}).append(conteudo)
@@ -66,26 +73,87 @@ function prepararTabulerio() {
 
 function onClickPiece() {
     console.log(this);
-    let currentPosition = getPosition(this);
+    let curPos = getPosition(this);
     let pieceCor = ( $(this).hasClass('branco') ? 'branco' : 'preto');
+    clearMarkings();
+
+    console.log('posições posiveis', pieceCor);
+    //marcando peça no lugar atual
+    markingSquare(curPos['row'], curPos['col'], 'blue');
 
     switch ($(this).attr('piece')) {
         case 'pawn':
-            console.log(this);
-            console.log(currentPosition);
-            console.log('posições posiveis', pieceCor);
-
             if(pieceCor == 'branco'){
+                markingSquare(curPos['row'] - 1, curPos['col'], 'green');
+                markingSquare(curPos['row'] - 1, (curPos['col'] - 1), 'red');
+                markingSquare(curPos['row'] - 1, (curPos['col'] + 1), 'red');
 
+                if(curPos['row'] == curPos['rowInitial'])
+                    markingSquare(curPos['row'] - 2, curPos['col'], 'green');
             }else{
-                console.log('row', (currentPosition['row'] + 1), 'col', currentPosition['col'])
-                
+                markingSquare(curPos['row'] + 1, curPos['col'], 'green');
+                markingSquare(curPos['row'] + 1, (curPos['col'] - 1), 'red');
+                markingSquare(curPos['row'] + 1, (curPos['col'] + 1), 'red');
+
+                if(curPos['row'] == curPos['rowInitial'])
+                    markingSquare(curPos['row'] + 2, curPos['col'], 'green');
+            }
+        break;
+        case 'knight':
+            markingSquare(curPos['row'] - 1, (curPos['col'] - 2), 'green');
+            markingSquare(curPos['row'] - 1, (curPos['col'] + 2), 'green');
+            markingSquare(curPos['row'] - 2, (curPos['col'] - 1), 'green');
+            markingSquare(curPos['row'] - 2, (curPos['col'] + 1), 'green');
+
+            markingSquare(curPos['row'] + 1, (curPos['col'] - 2), 'green');
+            markingSquare(curPos['row'] + 1, (curPos['col'] + 2), 'green');
+            markingSquare(curPos['row'] + 2, (curPos['col'] - 1), 'green');
+            markingSquare(curPos['row'] + 2, (curPos['col'] + 1), 'green');
+        break;
+        case 'bishop':
+            for (let i = 1; i < 8; i++) {
+                markingSquare(curPos['row'] - i, (curPos['col'] - i), 'green');
+                markingSquare(curPos['row'] - i, (curPos['col'] + i), 'green');
+                markingSquare(curPos['row'] + i, (curPos['col'] - i), 'green');
+                markingSquare(curPos['row'] + i, (curPos['col'] + i), 'green');
+            }
+        break;
+        case 'rook':
+            for (let i = 1; i < 8; i++) {
+                markingSquare(curPos['row'], (curPos['col'] - i), 'green');
+                markingSquare(curPos['row'], (curPos['col'] + i), 'green');
+                markingSquare((curPos['row'] - i), curPos['col'], 'green');
+                markingSquare((curPos['row'] + i), curPos['col'], 'green');
             }
         break;
     }
 }
 
 function getPosition(piece) {
-    let currentCol = $(piece).closest('.col');
-    return { row:currentCol.attr('refRow'), col:currentCol.attr('refCol') };
+    let curCol = $(piece).closest('.col');
+    return { 
+        row: parseInt(curCol.attr('refRow')),
+        col: parseInt(curCol.attr('refCol')),
+        rowInitial: parseInt($(piece).attr('rowInitial')),
+        colInitial: parseInt($(piece).attr('colInitial')),
+    };
+}
+
+function markingSquare(row, col, color = 'green') {
+    let el = tabulerio.find(`.col[refrow="${row}"][refcol="${col}"]`);
+    if(el.attr('class')){
+        $.each(el.attr('class').split(' '), (j, classe)=>{
+            if(classe.indexOf('mark-') == 0) el.removeClass(classe);
+        });
+    }
+    el.addClass(`mark-${color}`);
+}
+
+function clearMarkings() {
+    $.each($('.tabuleiro').find('[class*="mark-"]'), function (i, obj) {
+        $.each($(obj).attr('class').split(' '), (j, classe)=>{
+            if(classe.indexOf('mark-') == 0)
+                $(obj).removeClass(classe);
+        });
+    });
 }
