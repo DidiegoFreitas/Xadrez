@@ -36,6 +36,12 @@
     border: 1px solid !important;
     background-color: #e5a900c9;
 }
+.tabuleiro .row:first-child > div.col[class*="mark-"]::after,
+.tabuleiro .row:last-child > div.col[class*="mark-"]::after,
+.tabuleiro .row > div:first-child.col[class*="mark-"]::after,
+.tabuleiro .row > div:last-child.col[class*="mark-"]::after{
+    display: none !important;
+}
 .tabuleiro .row > div i{
     width: 100%;
     height: 100%;
@@ -56,6 +62,7 @@
 }
 .tabuleiro .row > div i,
 .tabuleiro .row > div i.cicle{
+    z-index: 1;
     border-radius: 50%;
     box-shadow: inset 0 0 12px -2px black;
 }
@@ -70,22 +77,34 @@
     color: black;
 }
 .tabuleiro .row > div.col[class*="mark-"]{
-    width: 24px;
-    height: 22px;
-    border: 3px solid;
+    position: relative;
 }
-.tabuleiro .row > div.col.mark-blue{
+.tabuleiro .row > div.col[class*="mark-"]::after{
+    content: "";
+    opacity: 0.5;
+    position: absolute;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    border: 3px solid white;
+    background-color: white;
+}
+.tabuleiro .row > div.col.mark-blue::after{
     border-color: blue;
+    background-color: blue;
 }
-.tabuleiro .row > div.col.mark-green{
+.tabuleiro .row > div.col.mark-green::after{
     border-color: green;
+    background-color: green;
 }
-.tabuleiro .row > div.col.mark-red{
+.tabuleiro .row > div.col.mark-red::after{
     border-color: red;
+    background-color: red;
 }
-.tabuleiro .row > div.col.mark-orange{
+.tabuleiro .row > div.col.mark-orange::after{
     border-color: orange;
+    background-color: orange;
 }
-.tabuleiro .row > div.col.mark-yellow{
+.tabuleiro .row > div.col.mark-yellow::after{
     border-color: yellow;
+    background-color: yellow;
 }
