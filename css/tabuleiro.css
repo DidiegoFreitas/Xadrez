@@ -1,11 +1,21 @@
+.cemiterio{
+    width: 10%;
+    height: 100%;
+    max-width: 100px;
+    background-color: #adadad;
+}
 .tabuleiro{
+    flex: 1;
+    z-index: 1;
     display: flex;
-    padding: 20px;
+    padding: 10px;
+    overflow: auto;
     border: 1px solid;
     flex-wrap: nowrap;
     align-items: center;
     flex-direction: column;
     justify-content: center;
+    box-shadow: 0 0 20px 0px black;
 }
 .tabuleiro .row{
     display: flex;
@@ -41,34 +51,6 @@
 .tabuleiro .row > div:first-child.col[class*="mark-"]::after,
 .tabuleiro .row > div:last-child.col[class*="mark-"]::after{
     display: none !important;
-}
-.tabuleiro .row > div i{
-    width: 100%;
-    height: 100%;
-    display: flex;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    border: 1px solid #919191;
-}
-.tabuleiro .row > div i:hover{
-    background-color: #e9e9e9;
-}
-.tabuleiro .row > div i,
-.tabuleiro .row > div i.square{
-    border-radius: 3px;
-    box-shadow: 0 0 3px 0 #505050;
-}
-.tabuleiro .row > div i,
-.tabuleiro .row > div i.cicle{
-    z-index: 1;
-    border-radius: 50%;
-    box-shadow: inset 0 0 12px -2px black;
-}
-.tabuleiro .row > div i.branco{
-    background-color: black;
-    box-shadow: inset 0 0 8px -2px white;
 }
 .branco{
     color: white;
@@ -107,4 +89,35 @@
 .tabuleiro .row > div.col.mark-yellow::after{
     border-color: yellow;
     background-color: yellow;
+}
+.tabuleiro .row > div.col.mark-green{
+    cursor: pointer;
+}
+i[piece]{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border: 1px solid #919191;
+}
+i[piece]:hover{
+    background-color: #e9e9e9;
+}
+i[piece],
+i[piece].square{
+    border-radius: 3px;
+    box-shadow: 0 0 3px 0 #505050;
+}
+i[piece],
+i[piece].cicle{
+    z-index: 1;
+    border-radius: 50%;
+    box-shadow: inset 0 0 12px -2px black;
+}
+i[piece].branco{
+    background-color: black;
+    box-shadow: inset 0 0 8px -2px white;
 }

@@ -2,7 +2,10 @@ $(()=>{
     console.log('depois de recarregar');
     prepararTabulerio();
 });
+
 var tabulerio = $('<div>', {class:'tabuleiro'});
+var bancoBranco = $('<div>', {class:'cemiterio'});
+var bancoPreto = $('<div>', {class:'cemiterio'});
 var pieceChess = {};
 
 function createPieceChess(icon, cor, rowInitial, colInitial) {
@@ -63,314 +66,242 @@ function prepararTabulerio() {
             if(r==5 && c==5) conteudo = createPieceChess('pawn', 'branco', r, c);
 
             row.append(
-                $('<div>', {class:`col col_${c} ${ (((r + c) % 2) > 0) ? 'W' : 'B' }`, refRow:r, refCol:c}).append(conteudo)
+                $('<div>', {class:`col col_${c} ${ (((r + c) % 2) > 0) ? 'W' : 'B' }`, refRow:r, refCol:c})
+                .on('click', onClickSquare)
+                .append(conteudo)
             )
         }
         tabulerio.append(row);
     }
 
+    $('body').append(bancoBranco);
     $('body').append(tabulerio);
+    $('body').append(bancoPreto);
+}
+
+function onClickSquare() {
+    if($(this).hasClass('mark-blue')){
+        clearMarkings();
+    }else if($(this).hasClass('mark-green')){
+        $(this).append(tabulerio.find('.mark-blue [piece]'));
+        clearMarkings();
+    }else if($(this).hasClass('mark-red')){
+        console.log('comer peca');
+        console.log('Remover', $(this).find('[piece]'));
+        console.log('Trazer', tabulerio.find('.mark-blue [piece]'));
+        $(this).find('[piece]').remove();
+
+        $(this).append(tabulerio.find('.mark-blue [piece]'));
+        clearMarkings();
+    }else if($(this).hasClass('mark-orange')){
+        clearMarkings();
+        $(this).find('[piece]').trigger('click');
+    }
 }
 
 function onClickPiece() {
-    // console.log(this);
-    let curPos = getCurrentPosition(this);
-    let curPiece = $(this).attr('piece');
-    let pieceCor = ( $(this).hasClass('branco') ? 'branco' : 'preto');
-    clearMarkings();
+    if($(this).closest('[class*="mark-"]').length == 0){
+        let curPos = getCurrentPosition(this);
+        let curPiece = $(this).attr('piece');
+        let pieceCor = ( $(this).hasClass('branco') ? 'branco' : 'preto');
+        clearMarkings();
 
-    // console.log('posições posiveis', getAllPositions(getCurrentPosition(this), curPiece) );
-    getAllPositionsDiff(getCurrentPosition(this), curPiece);
+        //marcando peça no lugar atual
+        count = logCount = 0;
+        markingSquare(curPos['row'], curPos['col'], 'blue');
 
-    let markingPositions = rankingPositions(curPiece, pieceCor, getCurrentPosition(this), getAllPositions(getCurrentPosition(this), curPiece));
-
-    //marcando peça no lugar atual
-    count = logCount = 0;
-    markingSquare(curPos['row'], curPos['col'], 'blue');
-    // console.log(markingPositions)
-
-    $.each(markingPositions, (color, positions)=>{
-        $.each(positions, (i, pos)=>{
-            // console.log(color, pos.row, pos.col, pos.element);
-            markingSquare(pos.row, pos.col, color);
+        let markingPositions = rankingPositions(pieceCor, getAllPositions(curPos, curPiece));
+        $.each(markingPositions, (i, positions)=>{
+            $.each(positions, (j, pos)=>{
+                if(pos) markingSquare(pos.row, pos.col, pos.color);
+            });
         });
-    });
-
-    /* switch (curPiece) {
-        case 'pawn':
-            if(pieceCor == 'branco'){
-                markingSquare(curPos['row'] - 1, curPos['col'], 'green');
-                markingSquare(curPos['row'] - 1, (curPos['col'] - 1), 'red');
-                markingSquare(curPos['row'] - 1, (curPos['col'] + 1), 'red');
-
-                if(curPos['row'] == curPos['rowInitial'])
-                    markingSquare(curPos['row'] - 2, curPos['col'], 'green');
-            }else{
-                markingSquare(curPos['row'] + 1, curPos['col'], 'green');
-                markingSquare(curPos['row'] + 1, (curPos['col'] - 1), 'red');
-                markingSquare(curPos['row'] + 1, (curPos['col'] + 1), 'red');
-
-                if(curPos['row'] == curPos['rowInitial'])
-                    markingSquare(curPos['row'] + 2, curPos['col'], 'green');
-            }
-        break;
-        case 'knight':
-            markingSquare(curPos['row'] - 1, (curPos['col'] - 2), 'green');
-            markingSquare(curPos['row'] - 1, (curPos['col'] + 2), 'green');
-            markingSquare(curPos['row'] - 2, (curPos['col'] - 1), 'green');
-            markingSquare(curPos['row'] - 2, (curPos['col'] + 1), 'green');
-
-            markingSquare(curPos['row'] + 1, (curPos['col'] - 2), 'green');
-            markingSquare(curPos['row'] + 1, (curPos['col'] + 2), 'green');
-            markingSquare(curPos['row'] + 2, (curPos['col'] - 1), 'green');
-            markingSquare(curPos['row'] + 2, (curPos['col'] + 1), 'green');
-        break;
-        case 'bishop':
-            for (let i = 1; i < 8; i++) {
-                markingSquare(curPos['row'] - i, (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'] - i, (curPos['col'] + i), 'green');
-                markingSquare(curPos['row'] + i, (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'] + i, (curPos['col'] + i), 'green');
-            }
-        break;
-        case 'rook':
-            for (let i = 1; i < 8; i++) {
-                markingSquare(curPos['row'], (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'], (curPos['col'] + i), 'green');
-                markingSquare((curPos['row'] - i), curPos['col'], 'green');
-                markingSquare((curPos['row'] + i), curPos['col'], 'green');
-            }
-        break;
-        case 'queen':
-            for (let i = 1; i < 8; i++) {
-                markingSquare(curPos['row'] - i, (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'] - i, (curPos['col'] + i), 'green');
-                markingSquare(curPos['row'] + i, (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'] + i, (curPos['col'] + i), 'green');
-
-                markingSquare(curPos['row'], (curPos['col'] - i), 'green');
-                markingSquare(curPos['row'], (curPos['col'] + i), 'green');
-                markingSquare((curPos['row'] - i), curPos['col'], 'green');
-                markingSquare((curPos['row'] + i), curPos['col'], 'green');
-            }
-        break;
-        case 'king':
-            markingSquare(curPos['row'] - 1, (curPos['col'] - 1), 'green');
-            markingSquare(curPos['row'] - 1, (curPos['col'] + 1), 'green');
-            markingSquare(curPos['row'] + 1, (curPos['col'] - 1), 'green');
-            markingSquare(curPos['row'] + 1, (curPos['col'] + 1), 'green');
-
-            markingSquare(curPos['row'], (curPos['col'] - 1), 'green');
-            markingSquare(curPos['row'], (curPos['col'] + 1), 'green');
-            markingSquare((curPos['row'] - 1), curPos['col'], 'green');
-            markingSquare((curPos['row'] + 1), curPos['col'], 'green');
-        break;
-    } */
+    }
 }
 
-function rankingPositions(currentPiece, currentPieceColor, currentPosition, allPositions) {
-    let res = { blue:[], green:[], red:[], orange:[], yellow:[] };
-
-    // console.log(currentPiece, currentPieceColor, currentPosition, allPositions);
-    // console.log( allPositions.length );
-    let itemBloqueandoLinha = false;
-    $.each(allPositions, (i, pos)=>{
-        // console.log(pos);
-        let square = tabulerio.find(`.col[refrow="${pos.row}"][refcol="${pos.col}"]`);
-        pos.element = square;
-
-        if(pos.row == currentPosition.row){
-            res.blue.push(pos);
-            // console.log(itemBloqueandoLinha, pos.col, pos)
-            // if(itemBloqueandoLinha){
-            // }
-
-            // if (square.html().length > 0) {
-            //     itemBloqueandoLinha = pos;
-            //     // console.log('VERDE');
-            //     // res.green.push(pos);
-            // }
-
-        }else if(pos.col == currentPosition.col){
-            res.yellow.push(pos);
-        }else{
-
-            // console.log(square.html().length);
-            if (square.html().length == 0) {
-                // console.log('VERDE');
-                res.green.push(pos);
-            }else{
-                let piece = square.find('i');
-                if(piece.hasClass(currentPieceColor)){
-                    // console.log('mesma cor');
-                    res.orange.push(pos);
-                }else{
-                    // console.log('cor do adversario');
-                    res.red.push(pos);
-                }
-                // console.log('Verificar qual item tem', piece);
+function removePosition(pos, index) {
+    if(index > 0){
+        for (let i = 0; i < index; i++) {
+            if(pos[i] != undefined && pos[i]['color'] != 'green'){
+                return true;
             }
         }
-    });
+    }
+    return false;
+}
 
-    // let casasNaMesmaLinha = [];
-    // let casasNaMesmaColuna = [];
-    // $.each(allPositions, (i,v)=>{
-    //     // console.log(i,v);
-    //     if(v.row == currentPosition.row) casasNaMesmaLinha.push(v);
-    //     if(v.col == currentPosition.col) casasNaMesmaColuna.push(v);
-    // });
-    // console.log(casasNaMesmaLinha);
-    // console.log(casasNaMesmaColuna);
-    // console.log(res);
-    return res;
+function rankingPositions(currentPieceColor, allPositions) {
+    $.each(allPositions, (direction, positions)=>{
+        $.each(positions, (i, pos)=>{
+            let square = tabulerio.find(`.col[refrow="${pos.row}"][refcol="${pos.col}"]`);
+            if(square.length > 0){
+                if(square.html().length == 0){
+                    if(removePosition(positions, i)) delete allPositions[direction][i];
+                    pos.color = 'green';
+                }else{
+                    let piece = square.find('[piece]');
+                    if(piece.hasClass(currentPieceColor)){
+                        if(removePosition(positions, i)) delete allPositions[direction][i];
+                        pos.color = 'orange';
+                    }else{
+                        if(removePosition(positions, i)) delete allPositions[direction][i];
+                        pos.color = 'red';
+                    }
+                }
+            }
+        });
+    });
+    return allPositions;
 }
 
 function getAllPositions(curPos, currentPiece) {
-    let res = [];
+    let res = { row_up:[], diag_up_right:[], col_right:[], diag_down_right:[], row_down:[], diag_down_left:[], col_left:[], diag_up_left:[], };
+
     switch (currentPiece) {
         case 'pawn':
             if(curPos['rowInitial'] > 4){
                 if( isValidOne((curPos['row'] - 1)) ){
                     if( isValidOne(curPos['col']) )
-                        res.push( { row: (curPos['row'] - 1), col: curPos['col'], } );
+                        res.row_up.push( { row: (curPos['row'] - 1), col: curPos['col'], } );
                     if( isValidOne((curPos['col'] - 1)) )
-                        res.push( { row: (curPos['row'] - 1), col: (curPos['col'] - 1), } );
+                        res.diag_up_left.push( { row: (curPos['row'] - 1), col: (curPos['col'] - 1), } );
                     if( isValidOne((curPos['col'] + 1)) )
-                        res.push( { row: (curPos['row'] - 1), col: (curPos['col'] + 1), } );
+                        res.diag_up_right.push( { row: (curPos['row'] - 1), col: (curPos['col'] + 1), } );
                 }
 
                 if( (curPos['row'] == curPos['rowInitial']) && isValid((curPos['row'] - 2), curPos['col']) )
-                    res.push( { row: (curPos['row'] - 2), col: curPos['col'], } );
+                    res.row_up.push( { row: (curPos['row'] - 2), col: curPos['col'], } );
             }else{
                 if( isValidOne((curPos['row'] + 1)) ){
                     if( isValidOne(curPos['col']) )
-                        res.push( { row: (curPos['row'] + 1), col: curPos['col'], } );
+                        res.row_down.push( { row: (curPos['row'] + 1), col: curPos['col'], } );
                     if( isValidOne((curPos['col'] - 1)) )
-                        res.push( { row: (curPos['row'] + 1), col: (curPos['col'] - 1), } );
+                        res.diag_down_left.push( { row: (curPos['row'] + 1), col: (curPos['col'] - 1), } );
                     if( isValidOne((curPos['col'] + 1)) )
-                        res.push( { row: (curPos['row'] + 1), col: (curPos['col'] + 1), } );
+                        res.diag_down_right.push( { row: (curPos['row'] + 1), col: (curPos['col'] + 1), } );
                 }
 
                 if( curPos['row'] == curPos['rowInitial'] && ( isValid((curPos['row'] + 2), curPos['col']) ))
-                    res.push( { row: (curPos['row'] + 2), col: curPos['col'], } );
+                    res.row_down.push( { row: (curPos['row'] + 2), col: curPos['col'], } );
             }
         break;
         case 'knight':
-            if( isValid((curPos['row'] - 1), (curPos['col'] - 2)) )
-                res.push( { row: (curPos['row'] - 1), col: (curPos['col'] - 2), } );
-            if( isValid((curPos['row'] - 1), (curPos['col'] + 2)) )
-                res.push( { row: (curPos['row'] - 1), col: (curPos['col'] + 2), } );
-            if( isValid((curPos['row'] - 2), (curPos['col'] - 1)) )
-                res.push( { row: (curPos['row'] - 2), col: (curPos['col'] - 1), } );
             if( isValid((curPos['row'] - 2), (curPos['col'] + 1)) )
-                res.push( { row: (curPos['row'] - 2), col: (curPos['col'] + 1), } );
-
-            if( isValid((curPos['row'] + 1), (curPos['col'] - 2)) )
-                res.push( { row: (curPos['row'] + 1), col: (curPos['col'] - 2), } );
+                res.row_up.push( { row: (curPos['row'] - 2), col: (curPos['col'] + 1), } );
+            if( isValid((curPos['row'] - 1), (curPos['col'] + 2)) )
+                res.diag_up_right.push( { row: (curPos['row'] - 1), col: (curPos['col'] + 2), } );
             if( isValid((curPos['row'] + 1), (curPos['col'] + 2)) )
-                res.push( { row: (curPos['row'] + 1), col: (curPos['col'] + 2), } );
-            if( isValid((curPos['row'] + 2), (curPos['col'] - 1)) )
-                res.push( { row: (curPos['row'] + 2), col: (curPos['col'] - 1), } );
+                res.col_right.push( { row: (curPos['row'] + 1), col: (curPos['col'] + 2), } );
             if( isValid((curPos['row'] + 2), (curPos['col'] + 1)) )
-                res.push( { row: (curPos['row'] + 2), col: (curPos['col'] + 1), } );
+                res.diag_down_right.push( { row: (curPos['row'] + 2), col: (curPos['col'] + 1), } );
+            if( isValid((curPos['row'] + 2), (curPos['col'] - 1)) )
+                res.row_down.push( { row: (curPos['row'] + 2), col: (curPos['col'] - 1), } );
+            if( isValid((curPos['row'] + 1), (curPos['col'] - 2)) )
+                res.diag_down_left.push( { row: (curPos['row'] + 1), col: (curPos['col'] - 2), } );
+            if( isValid((curPos['row'] - 1), (curPos['col'] - 2)) )
+                res.col_left.push( { row: (curPos['row'] - 1), col: (curPos['col'] - 2), } );
+            if( isValid((curPos['row'] - 2), (curPos['col'] - 1)) )
+                res.diag_up_left.push( { row: (curPos['row'] - 2), col: (curPos['col'] - 1), } );
         break;
         case 'king':
+            //ROW UP
+            if( isValid((curPos['row']-1), curPos['col']) )
+                res.row_up.push( { row: (curPos['row']-1), col: curPos['col'], } );
+            //DIAG UP RIGHT
+            if( isValid((curPos['row']-1), (curPos['col']+1)) )
+                res.diag_up_right.push( { row: (curPos['row']-1), col: (curPos['col']+1), } );
+            //COL RIGHT
+            if( isValid(curPos['row'], (curPos['col']+1)) )
+                res.col_right.push( { row: curPos['row'], col: (curPos['col']+1), } );
+            //DIAG DOWN RIGHT
+            if( isValid((curPos['row']+1), (curPos['col']+1)) )
+                res.diag_down_right.push( { row: (curPos['row']+1), col: (curPos['col']+1), } );
+            //ROW DOWN
+            if( isValid((curPos['row']+1), curPos['col']) )
+                res.row_down.push( { row: (curPos['row']+1), col: curPos['col'], } );
+            //DIAG DOWN LEFT
+            if( isValid((curPos['row']+1), (curPos['col']-1)) )
+                res.diag_down_left.push( { row: (curPos['row']+1), col: (curPos['col']-1), } );
+            //COL LEFT
+            if( isValid(curPos['row'], (curPos['col']-1)) )
+                res.col_left.push( { row: curPos['row'], col: (curPos['col']-1), } );
+            //DIAG UP LEFT
+            if( isValid((curPos['row']-1), (curPos['col']-1)) )
+                res.diag_up_left.push( { row: (curPos['row']-1), col: (curPos['col']-1), } );
+        break;
         case 'queen':
         case 'bishop':
         case 'rook':
             let limitLoop = 8;
-            if(currentPiece == 'king') limitLoop = 2;
+            let lastCol = 0;
 
-            for (let i = 1; i < limitLoop; i++) {
-                if(currentPiece != 'rook'){
-                    if( isValid((curPos['row'] - i), (curPos['col'] - i)) )
-                        res.push( { row: (curPos['row'] - i), col: (curPos['col'] - i), } );
-                    if( isValid((curPos['row'] - i), (curPos['col'] + i)) )
-                        res.push( { row: (curPos['row'] - i), col: (curPos['col'] + i), } );
-                    if( isValid((curPos['row'] + i), (curPos['col'] - i)) )
-                        res.push( { row: (curPos['row'] + i), col: (curPos['col'] - i), } );
-                    if( isValid((curPos['row'] + i), (curPos['col'] + i)) )
-                        res.push( { row: (curPos['row'] + i), col: (curPos['col'] + i), } );
+            if(currentPiece != 'bishop'){
+                //ROW UP
+                for (let i = curPos['row']-1; i > 0; i--) {
+                    if( isValid(i, curPos['col']) )
+                        res.row_up.push( { row: i, col: curPos['col'], } );
                 }
-
-                if(currentPiece != 'bishop'){
-                    if( isValid(curPos['row'], (curPos['col'] - i)) )
-                        res.push( { row: curPos['row'], col: (curPos['col'] - i), } );
-                    if( isValid(curPos['row'], (curPos['col'] + i)) )
-                        res.push( { row: curPos['row'], col: (curPos['col'] + i), } );
-                    if( isValid((curPos['row'] - i), curPos['col']) )
-                        res.push( { row: (curPos['row'] - i), col: curPos['col'], } );
-                    if( isValid((curPos['row'] + i), curPos['col']) )
-                        res.push( { row: (curPos['row'] + i), col: curPos['col'], } );
+            }
+            if(currentPiece != 'rook'){
+                //DIAG UP RIGHT
+                lastCol = curPos['col']+1;
+                for (let i = curPos['row']-1; i > 0; i--) {
+                    if( isValid(i, lastCol) )
+                        res.diag_up_right.push( { row: i, col: lastCol++, } );
+                }
+            }
+            if(currentPiece != 'bishop'){
+                //COL RIGHT
+                for (let i = curPos['col']+1; i <= (limitLoop + curPos['col']); i++) {
+                    if( isValid(curPos['row'], i) )
+                        res.col_right.push( { row: curPos['row'], col: i, } );
+                }
+            }
+            if(currentPiece != 'rook'){
+                //DIAG DOWN RIGHT
+                lastCol = curPos['col']+1;
+                for (let i = curPos['row']+1; i <= (limitLoop + curPos['row']); i++) {
+                    if( isValid(i, lastCol) )
+                        res.diag_down_right.push( { row: i, col: lastCol++, } );
+                }
+            }
+            if(currentPiece != 'bishop'){
+                //ROW DOWN
+                for (let i = curPos['row']+1; i <= (limitLoop + curPos['row']); i++) {
+                    if( isValid(i, curPos['col']) )
+                        res.row_down.push( { row: i, col: curPos['col'], } );
+                }
+            }
+            if(currentPiece != 'rook'){
+                //DIAG DOWN LEFT
+                lastCol = curPos['col']-1;
+                for (let i = curPos['row']+1; i <= (limitLoop + curPos['row']); i++) {
+                    if( isValid(i, lastCol) )
+                        res.diag_down_left.push( { row: i, col: lastCol--, } );
+                }
+            }
+            if(currentPiece != 'bishop'){
+                //COL LEFT
+                for (let i = curPos['col']-1; i > 0; i--) {
+                    if( isValid(curPos['row'], i) )
+                        res.col_left.push( { row: curPos['row'], col: i, } );
+                }
+            }
+            if(currentPiece != 'rook'){
+                //DIAG UP LEFT
+                lastCol = curPos['col']-1;
+                for (let i = curPos['row']-1; i > 0; i--) {
+                    if( isValid(i, lastCol) )
+                        res.diag_up_left.push( { row: i, col: lastCol--, } );
                 }
             }
         break;
     }
-
-    //ORDENANDO POR COLUNA DEPOIS POR LINHA
-    res.sort((a,b) =>  ( (a.col > b.col) ? 1 : ( (a.col < b.col) ? -1 : 0 ) ) )
-    .sort((a,b)=> ( (a.row > b.row) ? 1 : ( (a.row < b.row) ? -1 : 0 ) ) );
-
-    // console.warn(res);
-    return res;
-}
-function getAllPositionsDiff(curPos, currentPiece) {
-    let res = [];
-    let res2 = [];
-    switch (currentPiece) {
-        case 'queen':
-        case 'bishop':
-            let limitLoop = 8;
-            if(currentPiece == 'king') limitLoop = 2;
-
-            for (let i = 1; i < limitLoop; i++) {
-                if(currentPiece != 'rook'){
-                    if( isValid((curPos['row'] - i), (curPos['col'] - i)) )
-                        res.push( { row: (curPos['row'] - i), col: (curPos['col'] - i), } );
-                    if( isValid((curPos['row'] - i), (curPos['col'] + i)) )
-                        res.push( { row: (curPos['row'] - i), col: (curPos['col'] + i), } );
-                    if( isValid((curPos['row'] + i), (curPos['col'] - i)) )
-                        res.push( { row: (curPos['row'] + i), col: (curPos['col'] - i), } );
-                    if( isValid((curPos['row'] + i), (curPos['col'] + i)) )
-                        res.push( { row: (curPos['row'] + i), col: (curPos['col'] + i), } );
-                }
-
-                if(currentPiece != 'bishop'){
-                    if( isValid(curPos['row'], (curPos['col'] - i)) )
-                        res.push( { row: curPos['row'], col: (curPos['col'] - i), } );
-                    if( isValid(curPos['row'], (curPos['col'] + i)) )
-                        res.push( { row: curPos['row'], col: (curPos['col'] + i), } );
-                    if( isValid((curPos['row'] - i), curPos['col']) )
-                        res.push( { row: (curPos['row'] - i), col: curPos['col'], } );
-                    if( isValid((curPos['row'] + i), curPos['col']) )
-                        res.push( { row: (curPos['row'] + i), col: curPos['col'], } );
-                }
-            }
-
-            for (let i = curPos['row']; i < limitLoop; i++) {
-                for (let j = curPos['col']; j < limitLoop; j++) {
-
-                    if( isValid(curPos['row'], (curPos['col'] - j)) )
-                        res2.push( { row: curPos['row'], col: (curPos['col'] - j), } );
-                    if( isValid(curPos['row'], (curPos['col'] + j)) )
-                        res2.push( { row: curPos['row'], col: (curPos['col'] + j), } );
-                    if( isValid((curPos['row'] - i), curPos['col']) )
-                        res2.push( { row: (curPos['row'] - i), col: curPos['col'], } );
-                    if( isValid((curPos['row'] + i), curPos['col']) )
-                        res2.push( { row: (curPos['row'] + i), col: curPos['col'], } );
-                }
-            }
-        break;
-    }
-    console.warn(curPos);
-    console.log(res);
-    console.warn(res2);
     return res;
 }
 
 function isValid(row, col) {
-    return ( ((row > 0 && row < 9) && (col > 0 && col < 9)) ? true : false );
+    return ( (isValidOne(row) && isValidOne(col)) ? true : false );
 }
 
 function isValidOne(val) {
@@ -386,6 +317,7 @@ function getCurrentPosition(piece) {
         colInitial: parseInt($(piece).attr('colInitial')),
     };
 }
+
 let count = 0;
 let logCount = 0;
 function markingSquare(row, col, color = 'green') {
@@ -396,9 +328,9 @@ function markingSquare(row, col, color = 'green') {
         });
     }
     setTimeout(() => {
-        // console.log('executou', logCount++);
+        console.log('executou', logCount++);
         el.addClass(`mark-${color}`);
-    }, (count++ * 100));
+    }, (count++ * 1));
 }
 
 function clearMarkings() {
