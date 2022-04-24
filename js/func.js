@@ -79,23 +79,47 @@ function prepararTabulerio() {
     $('body').append(bancoPreto);
 }
 
+function movedAnimation(currentPiece, address, callback = ()=>{}) {
+    let obj = {
+        top:(parseInt(address.top) + 4),
+        left:(parseInt(address.left) + 3) 
+    };
+
+    currentPiece
+    .css('width', `${currentPiece.width()}px`)
+    .css('height', `${currentPiece.height()}px`)
+    .css('position', 'fixed')
+    .css('z-index', '999')
+
+    currentPiece.animate(obj, 2000, callback);
+}
+
 function onClickSquare() {
+    let curPieceSquare = $(this).find('[piece]');
+    let pieceMove = tabulerio.find('.mark-blue [piece]');
     if($(this).hasClass('mark-blue')){
         clearMarkings();
     }else if($(this).hasClass('mark-green')){
-        $(this).append(tabulerio.find('.mark-blue [piece]'));
-        clearMarkings();
+        movedAnimation(pieceMove, $(this).position(), ()=>{
+            $(this).append(pieceMove);
+            pieceMove.removeAttr('style');
+            clearMarkings();
+        });
     }else if($(this).hasClass('mark-red')){
         console.log('comer peca');
-        console.log('Remover', $(this).find('[piece]'));
-        console.log('Trazer', tabulerio.find('.mark-blue [piece]'));
-        $(this).find('[piece]').remove();
+        console.log('Remover', curPieceSquare);
+        console.log('Trazer', pieceMove);
 
-        $(this).append(tabulerio.find('.mark-blue [piece]'));
-        clearMarkings();
+        movedAnimation(pieceMove, $(this).position(), ()=>{
+            curPieceSquare.remove();
+
+            $(this).append(pieceMove);
+            pieceMove.removeAttr('style');
+            clearMarkings();
+        });
     }else if($(this).hasClass('mark-orange')){
         clearMarkings();
-        $(this).find('[piece]').trigger('click');
+        curPieceSquare.trigger('click');
     }
 }
 
@@ -328,7 +352,7 @@ function markingSquare(row, col, color = 'green') {
         });
     }
     setTimeout(() => {
-        console.log('executou', logCount++);
+        // console.log('executou', logCount++);
         el.addClass(`mark-${color}`);
     }, (count++ * 1));
 }
