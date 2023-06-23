@@ -1,0 +1,91 @@
+#mensagens{
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    display: flex;
+    position: fixed;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: flex-start;
+    background-color: #b5b5b5ab;
+}
+#mensagens *{
+    font-size: 10px;
+}
+.caixa-dialogo{
+    padding: 6px;
+    margin-right: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background-color: #bfbfbf;
+    box-shadow: 0 0 7px 0 black;
+}
+.caixa-dialogo-mensagens{
+    height: 100px;
+    overflow: auto;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    background-color: #e7e7e7;
+    border: 1px solid #838383;
+    box-shadow: inset 0 0 2px 0 black;
+}
+.caixa-dialogo-mensagens > div{
+    margin: 5px 10px;
+    padding: 3px;
+    position: relative;
+    border-radius: 3px;
+    border: 1px solid gray;
+    background-color: #dfdfdf;
+    box-shadow: 0 0 2px 0 black;
+}
+.caixa-dialogo-mensagens > div::after{
+    left: -5px;
+    width: 7px;
+    height: 7px;
+    content: "";
+    position: absolute;
+    top: calc(50% - 5px);
+    transform: rotate(45deg);
+    background-color: #dfdfdf;
+    border-left: 1px solid gray;
+    border-bottom: 1px solid gray;
+    box-shadow: -1px 1px 1px 0px #00000047;
+}
+.caixa-dialogo-mensagens > div.you::after{
+    right: -5px;
+    left: inherit;
+    border-left: 0px;
+    border-bottom: 0px;
+    border-top: 1px solid gray;
+    border-right: 1px solid gray;
+    box-shadow: 1px -1px 1px 0px #00000047;
+}
+.caixa-dialogo-mensagens > div.you::after,
+.caixa-dialogo-mensagens > div.you{
+    border-color: green;
+}
+.caixa-dialogo-mensagens > div.others::after,
+.caixa-dialogo-mensagens > div.others{
+    border-color: orange;
+}
+.caixa-dialogo-input{
+    display: flex;
+}
+.caixa-dialogo-input input{
+    flex: 1;
+    border: 0px;
+    padding: 4px 8px;
+    border-radius: 2px;
+}
+.caixa-dialogo-input input[type="button"]{
+    width: 22px;
+    flex: inherit;
+    cursor: pointer;
+    margin-left: 5px;
+    box-shadow: 0 0 2px 0 black;
+}
